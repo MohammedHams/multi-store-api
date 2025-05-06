@@ -25,6 +25,16 @@ class StaffController extends Controller
 
         return response()->json($staff);
     }
+    public function show(Store $store, User $user)
+    {
+        // Optionally, check if $user actually belongs to $store
+        if ($user->store_id !== $store->id) {
+            return response()->json(['message' => 'User not found in this store'], 404);
+        }
+
+        return response()->json($user);
+    }
+
 
     public function store(Request $request, Store $store)
     {

@@ -21,6 +21,7 @@ class StaffPermissionsController extends Controller
     {
         $permissions = StaffPermission::where('store_id', $storeId)
             ->where('user_id', $userId)
+            
             ->firstOrFail();
 
         $permissions->update($request->validated());

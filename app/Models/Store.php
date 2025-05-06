@@ -25,5 +25,10 @@ class Store extends Model
     {
         return $this->hasMany(Order::class);
     }
+    public function staff()
+    {
+        return $this->hasMany(User::class, 'store_id');
+    }
+
 
 }

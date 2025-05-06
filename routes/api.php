@@ -1,70 +1,111 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\OtpVerificationsController;
-use App\Http\Controllers\Api\StoreController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\StaffPermissionsController;
-use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ExternalServiceLogsController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OtpVerificationsController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\StaffPermissionsController;
+use App\Http\Controllers\Api\StoreController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| Authentication Routes
 |--------------------------------------------------------------------------
 */
-
-Route::prefix('auth')->group(function () {
-    Route::post('/verify-otp', [OtpVerificationsController::class, 'verifyOtp']);
-    Route::post('/resend-otp', [OtpVerificationsController::class, 'resendOtp']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::post('/admin/login', [AuthController::class, 'superAdminLogin']);
-    Route::post('/store_owner/login', [AuthController::class, 'storeOwnerLogin']);
-    Route::post('/staff/login', [AuthController::class, 'staffLogin']);
-
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('stores', StoreController::class);
-    Route::apiResource('products', ProductController::class);
-    Route::apiResource('orders', OrderController::class);
-    Route::apiResource('external-logs', ExternalServiceLogsController::class)->except(['store', 'update']);
-    Route::post('/orders/{order}/send-whatsapp', [OrderController::class, 'sendToWhatsApp']);
-    Route::post('/external-logs/{log}/retry', [ExternalServiceLogsController::class, 'retry']);
-
-    Route::prefix('stores/{store}/staff/{user}')->group(function () {
-        Route::apiResource('permissions', StaffPermissionsController::class)->only([
-            'index', 'update', 'destroy'
-        ]);
+Route::prefix('auth')->name('auth.')->group(function () {
+    // OTP Routes
+    Route::controller(OtpVerificationsController::class)->group(function () {
+        Route::post('verify-otp', 'verifyOtp')->name('verify-otp');
+        Route::post('resend-otp', 'resendOtp')->name('resend-otp');
     });
-});
-Route::middleware(['auth:sanctum', 'user.type:store_owner,staff'])->group(function () {
-    Route::prefix('store/{store}')->group(function () {
-        // إدارة الطلبات
-        Route::get('/orders', [OrderController::class, 'index'])
-            ->middleware('can:manageOrders,App\Models\Store');
 
-        Route::apiResource('/products', ProductController::class)
-            ->middleware('can:manageProducts,App\Models\Store');
+    // Login Routes
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('admin/login', 'superAdminLogin')->name('admin.login');
+        Route::post('store_owner/login', 'storeOwnerLogin')->name('store-owner.login');
+        Route::post('staff/login', 'staffLogin')->name('staff.login');
 
-        Route::put('/settings', [StoreController::class, 'updateSettings'])
-            ->middleware('can:manageSettings,App\Models\Store');
-
-        Route::middleware(['auth:sanctum'])->group(function () {
-            Route::prefix('stores/{store}/staff/{user}')->group(function () {
-                Route::apiResource('permissions', StaffPermissionsController::class)
-                    ->only(['index', 'update', 'destroy']);
-            });
+        // Protected Routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('logout', 'logout')->name('logout');
         });
     });
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('stores.staff', StaffController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->parameters(['staff' => 'user']);
+/*
+|--------------------------------------------------------------------------
+| Protected API Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum','user.type:super_admin'])->group(function () {
+
+        Route::get('store', [StoreController::class, 'index'])->name('store.index');
+        Route::post('store', [StoreController::class, 'store'])->name('store.store');
+        Route::put('store/{store}', [StoreController::class, 'update'])->name('store.update');
+        Route::delete('store/{store}', [StoreController::class, 'destroy'])->name('store.destroy');
+    });
+
+    Route::get('store/{store}', [StoreController::class, 'show'])->name('store.show');
+
+    Route::prefix('store/{store}')->name('store.')->group(function () {
+
+            Route::apiResource('products', ProductController::class)->names([
+                'index' => 'products.index',
+                'store' => 'products.store',
+                'show' => 'products.show',
+                'update' => 'products.update',
+                'destroy' => 'products.destroy',
+            ]);
+
+            // Orders Resource
+            Route::apiResource('orders', OrderController::class)->names([
+                'index' => 'orders.index',
+                'store' => 'orders.store',
+                'show' => 'orders.show',
+                'update' => 'orders.update',
+                'destroy' => 'orders.destroy',
+            ]);
+
+
+    });
+        Route::middleware('can:manageSettings,App\Models\Store')
+            ->put('settings', [StoreController::class, 'updateSettings'])
+            ->name('settings.update');
+
+    Route::apiResource('store.staff', StaffController::class)
+        ->only(['index', 'store', 'update', 'destroy','show'])
+        ->parameters(['staff' => 'user'])
+        ->names([
+            'index' => 'store.staff.index',
+            'store' => 'store.staff.store',
+            'update' => 'store.staff.update',
+            'destroy' => 'store.staff.destroy',
+            'show' => 'store.staff.show',
+
+        ]);
+
+    Route::prefix('store/{store}/staff/{user}')->name('staff.')->group(function () {
+        Route::middleware('user.type:store_owner')->apiResource('permissions', StaffPermissionsController::class)
+            ->only(['index', 'update', 'destroy'])
+            ->names([
+                'index' => 'permissions.index',
+                'update' => 'permissions.update',
+                'destroy' => 'permissions.destroy',
+            ]);
+    });
+
+    Route::controller(ExternalServiceLogsController::class)->group(function () {
+        Route::apiResource('external-logs', ExternalServiceLogsController::class)
+            ->except(['store', 'update'])
+            ->names([
+                'index' => 'external-logs.index',
+                'show' => 'external-logs.show',
+                'destroy' => 'external-logs.destroy',
+            ]);
+        Route::post('external-logs/{log}/retry', 'retry')
+            ->name('external-logs.retry');
 });
-Route::get('/email/verify/{id}/{hash}', function (Request $request) {
-})->name('verification.verify');
+

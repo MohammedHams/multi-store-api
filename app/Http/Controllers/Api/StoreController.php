@@ -2,25 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Store;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Store;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+
 
 class StoreController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
-        if (!auth()->user()->can('viewAny', Store::class)) {
-            return response()->json("لا يمكنك الوصول لهذه الصفحة");
-        }
-
-        $stores = Store::all();
-        return response()->json($stores);
+            $stores = Store::all();
+            return response()->json($stores);
     }
 
 
     public function store(Request $request)
     {
+
         $validated = $request->validate([
             'name' => 'required|string',
             'subdomain' => 'required|unique:stores',
@@ -34,10 +36,14 @@ class StoreController extends Controller
 
     public function show(Store $store)
     {
-        return response()->json($store);
-    }
 
-    public function update(Request $request, Store $store)
+        $user = auth()->user();
+        if ($user->type == User::SUPER_ADMIN || $user->store_id == $store->id) {
+            return response()->json($store);
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }    public function update(Request $request, Store $store)
     {
         $validated = $request->validate([
             'name' => 'sometimes|string',
