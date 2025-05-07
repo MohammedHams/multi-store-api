@@ -44,8 +44,7 @@ class AuthController extends Controller
             ['otp_code' => $otp, 'expires_at' => now()->addMinutes(10)]
         );
 
-        Mail::to($user->email)->send(new SendOtp($otp));
-
+        Mail::to($user->email)->queue(new SendOtp($otp));
         return response()->json([
             'message' => 'تم إرسال OTP إلى بريدك الإلكتروني',
             'user_id' => $user->id,
