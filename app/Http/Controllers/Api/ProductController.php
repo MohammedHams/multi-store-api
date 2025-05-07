@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Import the trait
 
 class ProductController extends Controller
 {
+
     use AuthorizesRequests;
 
     /**

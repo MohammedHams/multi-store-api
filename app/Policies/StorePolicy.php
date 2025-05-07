@@ -20,19 +20,10 @@ class StorePolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->isAdmin($user) || $user->type === User::STORE_OWNER;
+        return $this->isAdmin($user);
     }
 
-    public function view(User $user, Store $store): bool
-    {
-        if ($this->isAdmin($user)) {
-            return true;
-        }
 
-        return $user->type === User::STORE_OWNER && $user->store_id === $store->id;
-    }
-
-    // Rename to ensure consistency throughout the application
     public function manageOrders(User $user, Store $store): bool
     {
         if ($this->isAdmin($user)) {
@@ -50,39 +41,7 @@ class StorePolicy
         }
 
         return ($user->type === User::STORE_OWNER && $user->store_id === $store->id) ||
-            ($user->type === User::STAFF &&
-                $user->store_id === $store->id &&
-                ($user->staffPermissions?->manage_products ?? false));
-    }
-
-    public function viewProduct(User $user, Product $product): bool
-    {
-        if ($this->isAdmin($user)) {
-            return true;
-        }
-
-        return ($user->type === User::STORE_OWNER && $user->store_id === $product->store_id) ||
-            ($user->type === User::STAFF && $user->staffPermissions->manage_products && $user->store_id === $product->store_id);
-    }
-
-    public function viewOrder(User $user, Order $order): bool
-    {
-        if ($this->isAdmin($user)) {
-            return true;
-        }
-
-        return ($user->type === User::STORE_OWNER && $user->store_id === $order->store_id) ||
-            ($user->type === User::STAFF && $user->staffPermissions->manage_orders && $user->store_id === $order->store_id);
-    }
-
-    public function manageSettings(User $user, Store $store): bool
-    {
-        if ($this->isAdmin($user)) {
-            return true;
-        }
-
-        return ($user->type === User::STORE_OWNER && $user->store_id === $store->id) ||
-            ($user->type === User::STAFF && $user->store_id === $store->id && $user->staffPermissions->manage_settings);
+            ($user->type === User::STAFF && $user->store_id === $store->id && $user->staffPermissions->manage_products);
     }
 
     public function manageStaff(User $user, Store $store): bool
