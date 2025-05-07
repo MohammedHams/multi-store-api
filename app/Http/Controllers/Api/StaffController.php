@@ -88,7 +88,7 @@ class StaffController extends Controller
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
-        Mail::to($user->email)->send(new StaffAccountCreated(
+        Mail::to($user->email)->queue(new StaffAccountCreated(
             $user,
             $password,
             $store,
