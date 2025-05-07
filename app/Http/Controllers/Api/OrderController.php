@@ -24,7 +24,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->type === User::SUPER_ADMIN) {
+        if ($this->authorize('viewAny')) {
             $orders = Order::with(['products', 'store', 'user'])->get();
         } else{
 
@@ -90,9 +90,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if ($user->type === User::STAFF) {
-            $this->authorize('viewOrder', $order);
-        }
+
 
         return response()->json($order->load(['products', 'store', 'user']));
     }

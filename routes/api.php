@@ -16,32 +16,23 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth')->name('auth.')->group(function () {
-    // OTP Routes
     Route::controller(OtpVerificationsController::class)->group(function () {
         Route::post('verify-otp', 'verifyOtp')->name('verify-otp');
         Route::post('resend-otp', 'resendOtp')->name('resend-otp');
     });
 
-    // Login Routes
     Route::controller(AuthController::class)->group(function () {
         Route::post('admin/login', 'superAdminLogin')->name('admin.login');
         Route::post('store_owner/login', 'storeOwnerLogin')->name('store-owner.login');
         Route::post('staff/login', 'staffLogin')->name('staff.login');
 
-        // Protected Routes
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('logout', 'logout')->name('logout');
         });
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Protected API Routes
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth:sanctum','user.type:super_admin'])->group(function () {
-
         Route::get('store', [StoreController::class, 'index'])->name('store.index');
         Route::post('store', [StoreController::class, 'store'])->name('store.store');
         Route::put('store/{store}', [StoreController::class, 'update'])->name('store.update');
