@@ -52,30 +52,18 @@ Route::middleware(['auth:sanctum','user.type:super_admin'])->group(function () {
 
     Route::prefix('store/{store}')->name('store.')->group(function () {
 
-            Route::apiResource('products', ProductController::class)->names([
-                'index' => 'products.index',
-                'store' => 'products.store',
-                'show' => 'products.show',
-                'update' => 'products.update',
-                'destroy' => 'products.destroy',
-            ]);
+            Route::middleware('can:manageProducts,store')->apiResource('products', ProductController::class);
 
-            // Orders Resource
-            Route::apiResource('orders', OrderController::class)->names([
-                'index' => 'orders.index',
-                'store' => 'orders.store',
-                'show' => 'orders.show',
-                'update' => 'orders.update',
-                'destroy' => 'orders.destroy',
-            ]);
+        Route::middleware('can:manageOrders,store')->apiResource('orders', OrderController::class);
+
 
 
     });
-        Route::middleware('can:manageSettings,App\Models\Store')
+        Route::middleware('can:manageSettings,store')
             ->put('settings', [StoreController::class, 'updateSettings'])
             ->name('settings.update');
 
-    Route::apiResource('store.staff', StaffController::class)
+Route::middleware('can:manageStaff')->apiResource('store.staff', StaffController::class)
         ->only(['index', 'store', 'update', 'destroy','show'])
         ->parameters(['staff' => 'user'])
         ->names([
@@ -88,7 +76,8 @@ Route::middleware(['auth:sanctum','user.type:super_admin'])->group(function () {
         ]);
 
     Route::prefix('store/{store}/staff/{user}')->name('staff.')->group(function () {
-        Route::middleware('user.type:store_owner')->apiResource('permissions', StaffPermissionsController::class)
+        Route::middleware(['user.type:store_owner,super_admin'])
+            ->apiResource('permissions', StaffPermissionsController::class)
             ->only(['index', 'update', 'destroy'])
             ->names([
                 'index' => 'permissions.index',

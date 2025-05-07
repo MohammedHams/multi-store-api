@@ -2,38 +2,52 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Store;
+use App\Models\User;
 use App\Models\StaffPermission;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StaffPermissionRequest;
+use Illuminate\Http\Request;
 
 class StaffPermissionsController extends Controller
 {
-    public function index($storeId, $userId)
+    public function index(Store $store, User $user)
     {
-        $permissions = StaffPermission::where('store_id', $storeId)
-            ->where('user_id', $userId)
-            ->firstOrFail();
+        if ($user->store_id !== $store->id) {
+            return response()->json(['message' => 'User not found in this store'], 404);
+        }
 
-        return response()->json($permissions);
+        return response()->json([
+            'permissions' => $user->staffPermissions
+        ]);
     }
 
-    public function update(StaffPermissionRequest $request, $storeId, $userId)
+    public function update(Request $request, Store $store, User $user, StaffPermission $permission)
     {
-        $permissions = StaffPermission::where('store_id', $storeId)
-            ->where('user_id', $userId)
-            
-            ->firstOrFail();
+        if ($permission->user_id !== $user->id || $user->store_id !== $store->id) {
+            return response()->json(['message' => 'Permission not found'], 404);
+        }
 
-        $permissions->update($request->validated());
+        $request->validate([
+            'manage_orders' => 'sometimes|boolean',
+            'manage_products' => 'sometimes|boolean',
+            'manage_settings' => 'sometimes|boolean'
+        ]);
 
-        return response()->json($permissions);
+        $permission->update($request->all());
+
+        return response()->json([
+            'message' => 'Permissions updated successfully',
+            'permissions' => $permission
+        ]);
     }
 
-    public function destroy($storeId, $userId)
+    public function destroy(Store $store, User $user, StaffPermission $permission)
     {
-        StaffPermission::where('store_id', $storeId)
-            ->where('user_id', $userId)
-            ->delete();
+        if ($permission->user_id !== $user->id || $user->store_id !== $store->id) {
+            return response()->json(['message' => 'Permission not found'], 404);
+        }
+
+        $permission->delete();
 
         return response()->json(null, 204);
     }

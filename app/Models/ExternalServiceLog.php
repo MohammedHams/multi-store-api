@@ -13,7 +13,6 @@ class ExternalServiceLog extends Model
         'status', 'response', 'attempts'
     ];
 
-    // علاقة مع الطلب
     public function order()
     {
         return $this->belongsTo(Order::class);

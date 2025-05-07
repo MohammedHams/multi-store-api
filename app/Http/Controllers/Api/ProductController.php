@@ -50,15 +50,11 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        // Authorize the user to view this specific product
         $this->authorize('viewProduct', $product);
 
         return response()->json($product);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(ProductRequest $request, Product $product)
     {
         // Authorize the user to manage this specific product
@@ -69,12 +65,8 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Product $product)
     {
-        // Authorize the user to manage this specific product
         $this->authorize('manageProducts', $product); // Assuming 'manageProducts' policy method handles deleting products as well
 
         $product->delete();

@@ -26,14 +26,13 @@ class OrderController extends Controller
 
         if ($user->type === User::SUPER_ADMIN) {
             $orders = Order::with(['products', 'store', 'user'])->get();
-        } elseif ($user->type === User::STORE_OWNER) {
+        } else{
+
             $orders = Order::with(['products', 'store', 'user'])
                 ->where('store_id', $user->store_id)
                 ->get();
-        } else {
-            // Staff users - handle via permissions
-            return response()->json(['message' => 'Unauthorized'], 403);
         }
+
 
         return response()->json($orders);
     }
@@ -43,7 +42,6 @@ class OrderController extends Controller
         return DB::transaction(function () use ($request) {
             $user = auth()->user();
 
-            // Validate store ownership for store owners
             if ($user->type === User::STORE_OWNER && $request->store_id !== $user->store_id) {
                 return response()->json(['message' => 'Unauthorized to create orders for this store'], 403);
             }

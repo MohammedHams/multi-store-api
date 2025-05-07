@@ -60,8 +60,6 @@ class User extends Authenticatable
     public function staffPermissions()
     {
         return $this->hasOne(StaffPermission::class);
-        // OR (if multiple permissions per user)
-        return $this->hasMany(StaffPermission::class);
     }
 
 }
