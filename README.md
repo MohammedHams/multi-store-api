@@ -13,10 +13,17 @@
 اليوزرات 
 
 admin - super@admin.com , secret
+
+
+
 store owner - storeowner@example.com , password
+
+
+
 staff - staff@example.com , password
 لتسجيل الدخول 
 api 
+
 http://127.0.0.1:8000/api/auth/login
 لتشغيل خدمة ارسال الايميل عبر env
 
