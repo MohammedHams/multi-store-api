@@ -1,8 +1,17 @@
 كيفية تشغيل المشروع
 1- يتم سحب المشروع من github
+
+
 2-تنفيذ الامر composer install
+
+
+
 2-تنفيذ أمر php artisan migrate:fresh --seed
+
+
+
 اليوزرات 
+
 admin - super@admin.com , secret
 store owner - storeowner@example.com , password
 staff - staff@example.com , password
