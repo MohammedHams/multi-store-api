@@ -13,26 +13,10 @@ use App\Mail\SendOtp;
 
 class AuthController extends Controller
 {
-    public function superAdminLogin(LoginRequest $request)
-    {
-        return $this->attemptLogin($request, User::SUPER_ADMIN);
-    }
 
-    public function storeOwnerLogin(LoginRequest $request)
-    {
-        return $this->attemptLogin($request, User::STORE_OWNER);
-    }
-
-    public function staffLogin(LoginRequest $request)
-    {
-        return $this->attemptLogin($request, User::STAFF);
-    }
-
-
-    public function attemptLogin(LoginRequest $request, $userType)
+    public function Login(LoginRequest $request)
     {
         $user = User::where('email', $request['email'])
-            ->where('type', $userType)
             ->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'المعلومات غير صحيحة'], 401);

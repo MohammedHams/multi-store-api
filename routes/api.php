@@ -22,16 +22,11 @@ Route::prefix('auth')->name('auth.')->group(function () {
     });
 
     Route::controller(AuthController::class)->group(function () {
-        Route::post('admin/login', 'superAdminLogin')->name('admin.login');
-        Route::post('store_owner/login', 'storeOwnerLogin')->name('store-owner.login');
-        Route::post('staff/login', 'staffLogin')->name('staff.login');
+        Route::post('login', 'Login');
     });
 });
 
 /*
-|--------------------------------------------------------------------------
-| Protected Routes (Requires Authentication)
-|--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
 
