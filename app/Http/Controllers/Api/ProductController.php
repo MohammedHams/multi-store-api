@@ -16,13 +16,12 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index($storeId)
+    public function index(Store $store)
     {
-        $store = Store::findOrFail($storeId);
-
         $this->authorize('manageProducts', $store);
 
         $products = $store->products;
+
         return response()->json($products);
     }
 
@@ -49,16 +48,15 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show(Store $store, $productId)
     {
-        $this->authorize('viewProduct', $product);
+        $product = $store->products()->findOrFail($productId); // Ensures the product belongs to this store
 
         return response()->json($product);
     }
 
     public function update(ProductRequest $request, Product $product)
     {
-        // Authorize the user to manage this specific product
         $this->authorize('manageProducts', $product); // Assuming 'manageProducts' policy method handles updating products as well
 
         $product->update($request->validated());

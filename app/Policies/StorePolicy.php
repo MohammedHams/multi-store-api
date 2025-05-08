@@ -18,10 +18,6 @@ class StorePolicy
         return in_array($user->type, [User::SUPER_ADMIN, 'admin']);
     }
 
-    public function viewAny(User $user): bool
-    {
-        return $this->isAdmin($user);
-    }
 
 
     public function manageOrders(User $user, Store $store): bool

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Order;
+use App\Models\Store;
 use App\Models\User;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
@@ -20,22 +21,23 @@ class OrderController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(Store $store)
     {
         $user = auth()->user();
 
-        if ($this->authorize('viewAny')) {
-            $orders = Order::with(['products', 'store', 'user'])->get();
-        } else{
-
+        if ($user->type === User::SUPER_ADMIN || $user->store_id === $store->id) {
             $orders = Order::with(['products', 'store', 'user'])
-                ->where('store_id', $user->store_id)
+                ->where('store_id', $store->id)
                 ->get();
+
+            return response()->json($orders);
         }
 
-
-        return response()->json($orders);
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
+
+
+
 
     public function store(OrderRequest $request): JsonResponse
     {
@@ -82,19 +84,17 @@ class OrderController extends Controller
     public function show($storeId, $orderId): JsonResponse
     {
         $user = Auth::user();
-        $order = Order::where('id', $orderId)
-            ->where('store_id', $storeId)
-            ->firstOrFail();
+
+        $order = Order::when($user->type !== User::SUPER_ADMIN, function ($query) use ($storeId) {
+            $query->where('store_id', $storeId);
+        })->findOrFail($orderId);
 
         if ($user->type === User::STORE_OWNER && $order->store_id !== $user->store_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-
-
         return response()->json($order->load(['products', 'store', 'user']));
     }
-
     public function update(OrderRequest $request, Order $order): JsonResponse
     {
         $user = auth()->user();
@@ -103,10 +103,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Additional validation for staff permissions
-        if ($user->type === User::STAFF) {
-            $this->authorize('updateOrder', $order);
-        }
+
 
         $order->update(['status' => $request->status]);
         return response()->json($order);
